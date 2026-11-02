@@ -29,7 +29,7 @@
 
 ## Installation
 
-Pre-built `.dmg` files will be published in [Releases](https://github.com/conaksoft/zymanager/releases).
+ZyManager is distributed as source code. Build it on your Mac as described below.
 
 ## Building from Source
 
@@ -62,13 +62,23 @@ ZyManager is a Swift Package written in SwiftUI with no third-party dependencies
 
 By installing or using ZyManager you agree to these terms.
 
+## License
+
+ZyManager is **source available** under the [PolyForm Noncommercial License 1.0.0](LICENSE).
+
+- **Free** for personal use, study, research, hobby projects and non-profit organizations.
+- **Commercial use requires a license.** This includes using ZyManager at work or inside a company, selling it, or building a product or service on it. Write to [contact@conaksoft.com](mailto:contact@conaksoft.com) for a commercial license.
+- The ZyManager name and logo are not covered by the license and may not be used for other products.
+
 ## Türkçe Özet
 
 **ZyManager**, [Conaksoft](https://conaksoft.com) tarafından geliştirilen, yazılımcılar için bir macOS depolama ve bellek yöneticisidir. Xcode, Android/Gradle, Flutter, Node.js, Python, PHP ve Homebrew önbelleklerini, projelerdeki `node_modules`, `.dart_tool` ve `build` gibi klasörleri bulur; neyin güvenle silinebileceğini gösterir ve yalnızca onayınızla temizler. Kurulu uygulamaları `~/Library` altındaki kalıntı dosyalarıyla birlikte kaldırabilir, RAM ve swap kullanımını menü çubuğundan izler. Uygulama hiçbir kullanım verisi toplamaz.
 
 **Sorumluluk reddi:** ZyManager "olduğu gibi" sunulur ve hiçbir garanti verilmez. Yürürlükteki mevzuatın izin verdiği en geniş ölçüde Conaksoft, uygulamanın kullanımından doğan veri kaybı ve hizmet kesintisi dahil hiçbir doğrudan veya dolaylı zarardan sorumlu değildir. Uygulama yalnızca sizin seçip onayladığınız öğeleri siler; "Dikkat" işaretli öğeler kendiliğinden geri gelmez. Önemli verilerinizin her zaman yedeğini alın. Uygulamayı kurarak veya kullanarak bu koşulları kabul etmiş sayılırsınız.
 
+**Lisans:** ZyManager'ın kaynak kodu [PolyForm Noncommercial 1.0.0](LICENSE) lisansıyla açıktır. Kişisel, eğitim, araştırma ve kâr amacı gütmeyen kullanım ücretsizdir. İş yerinde kullanım, satış veya ticari bir ürüne dahil etme gibi ticari kullanımlar için [contact@conaksoft.com](mailto:contact@conaksoft.com) adresinden lisans alınması gerekir.
+
 ---
 <div align="center">
-  <p>ZyManager is a product of <a href="https://conaksoft.com">Conaksoft</a>.<br>Copyright © 2026 Conaksoft. All rights reserved.</p>
+  <p>ZyManager is a product of <a href="https://conaksoft.com">Conaksoft</a>.<br>Copyright © 2026 Conak Soft LLC · <a href="LICENSE">PolyForm Noncommercial 1.0.0</a></p>
 </div>
