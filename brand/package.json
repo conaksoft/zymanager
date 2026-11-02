@@ -1,0 +1,12 @@
+{
+  "name": "macmanager-brand",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "render": "node render.mjs"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^25.16.0",
+    "sharp": "^0.35.5"
+  }
+}
