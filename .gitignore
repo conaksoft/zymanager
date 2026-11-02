@@ -4,6 +4,8 @@
 build/
 brand/node_modules/
 *.xcodeproj/xcuserdata/
-# Unused logo concepts and the comparison sheet stay local (node brand/render.mjs regenerates them)
-brand/options/*
-!brand/options/option-2.png
+# Logo drafts stay local (node brand/render.mjs / render-z.mjs regenerate them); only the chosen icon is tracked
+brand/options/
+brand/z/options/*
+!brand/z/options/z-2.png
+!brand/z/options/z-2.svg
