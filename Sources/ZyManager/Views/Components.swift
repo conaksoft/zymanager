@@ -151,7 +151,7 @@ struct SafetyBadge: View {
     let safety: Safety
 
     var body: some View {
-        Label(safety == .safe ? "Yeniden üretilir" : "Dikkat",
+        Label(safety == .safe ? L("Yeniden üretilir", "Regenerable") : L("Dikkat", "Caution"),
               systemImage: safety == .safe ? "arrow.triangle.2.circlepath" : "exclamationmark.triangle.fill")
             .font(.caption2.weight(.semibold))
             .labelStyle(.titleAndIcon)
@@ -452,8 +452,11 @@ struct CleanupConfirmation: View {
             HStack(spacing: 14) {
                 IconTile(symbol: "sparkles", tint: Brand.cyan, size: 44)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("\(total.fileSizeText) temizlenecek").numeral(22)
-                    Text("\(lines.count) öğe silinecek. Bunlar yeniden üretilebilir dosyalardır; ilgili araç gerektiğinde tekrar indirir ya da derler.")
+                    Text(L("\(total.fileSizeText) temizlenecek", "\(total.fileSizeText) to clean")).numeral(22)
+                    Text(L("\(lines.count) öğe silinecek. Bunlar yeniden üretilebilir dosyalardır; ilgili araç gerektiğinde tekrar indirir ya da derler.",
+                            lines.count == 1
+                                ? "1 item will be deleted. These are regenerable files; the tool that made them downloads or rebuilds them when needed."
+                                : "\(lines.count) items will be deleted. These are regenerable files; the tools that made them download or rebuild them when needed."))
                         .font(.callout).foregroundStyle(.secondary)
                 }
             }
@@ -482,7 +485,8 @@ struct CleanupConfirmation: View {
             .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Color.primary.opacity(0.07)))
 
             if hasCaution {
-                Label("\"Dikkat\" işaretli öğeler kendiliğinden geri gelmez; gerekirse elle yeniden oluşturman gerekir.",
+                Label(L("\"Dikkat\" işaretli öğeler kendiliğinden geri gelmez; gerekirse elle yeniden oluşturman gerekir.",
+                        "Items marked \"Caution\" don't come back on their own; you may need to recreate them by hand."),
                       systemImage: "exclamationmark.triangle.fill")
                     .font(.callout)
                     .foregroundStyle(Brand.amberInk)
@@ -492,19 +496,19 @@ struct CleanupConfirmation: View {
             }
 
             VStack(alignment: .leading, spacing: 4) {
-                Toggle("Silmek yerine Çöp Kutusu'na taşı", isOn: $toTrash)
+                Toggle(L("Silmek yerine Çöp Kutusu'na taşı", "Move to Trash instead of deleting"), isOn: $toTrash)
                     .toggleStyle(.switch).controlSize(.small)
                 if toTrash {
-                    Text("Alan, Çöp Kutusu boşaltılana kadar geri kazanılmaz.")
+                    Text(L("Alan, Çöp Kutusu boşaltılana kadar geri kazanılmaz.", "The space isn't freed until the Trash is emptied."))
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
 
             HStack {
                 Spacer()
-                Button("Vazgeç", role: .cancel) { dismiss() }
+                Button(L("Vazgeç", "Cancel"), role: .cancel) { dismiss() }
                     .keyboardShortcut(.cancelAction)
-                Button(toTrash ? "Çöp Kutusu'na taşı" : "Sil", role: .destructive) {
+                Button(toTrash ? L("Çöp Kutusu'na taşı", "Move to Trash") : L("Sil", "Delete"), role: .destructive) {
                     onConfirm(toTrash)
                     dismiss()
                 }
@@ -525,7 +529,7 @@ func revealInFinder(_ urls: [URL]) {
 extension Date {
     var relativeText: String {
         let f = RelativeDateTimeFormatter()
-        f.locale = Locale(identifier: "tr_TR")
+        f.locale = AppLanguage.locale
         f.unitsStyle = .full
         return f.localizedString(for: self, relativeTo: Date())
     }
@@ -536,13 +540,10 @@ extension Date {
 /// Non-blocking result toast shown at the bottom of a screen. Successes fade out on their own;
 /// failures stay until dismissed so nothing gets missed.
 struct ResultBanner: ViewModifier {
-    @Binding var message: String?
+    @Binding var message: ResultMessage?
     @State private var dismissTask: Task<Void, Never>?
 
-    private var isFailure: Bool {
-        guard let message else { return false }
-        return ["emedi", "amadı", "kapanmadı", "hata"].contains { message.lowercased().contains($0) }
-    }
+    private var isFailure: Bool { message?.isError ?? false }
 
     func body(content: Content) -> some View {
         content
@@ -552,7 +553,7 @@ struct ResultBanner: ViewModifier {
                         Image(systemName: isFailure ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
                             .font(.title3)
                             .foregroundStyle(isFailure ? Brand.amberInk : Brand.tealInk)
-                        Text(message)
+                        Text(message.text)
                             .font(.callout)
                             .fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: 440, alignment: .leading)
@@ -563,7 +564,7 @@ struct ResultBanner: ViewModifier {
                         }
                         .buttonStyle(.borderless)
                         .foregroundStyle(.secondary)
-                        .help("Kapat")
+                        .help(L("Kapat", "Close"))
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 11)
@@ -596,5 +597,5 @@ struct ResultBanner: ViewModifier {
 }
 
 extension View {
-    func resultBanner(_ message: Binding<String?>) -> some View { modifier(ResultBanner(message: message)) }
+    func resultBanner(_ message: Binding<ResultMessage?>) -> some View { modifier(ResultBanner(message: message)) }
 }

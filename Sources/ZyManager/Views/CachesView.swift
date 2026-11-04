@@ -26,10 +26,10 @@ struct CachesView: View {
         VStack(spacing: 0) {
             Group {
                 if caches.isScanning && !caches.hasScanned {
-                    ScanningPlaceholder(text: "Önbellekler taranıyor…", symbol: "archivebox")
+                    ScanningPlaceholder(text: L("Önbellekler taranıyor…", "Scanning caches…"), symbol: "archivebox")
                 } else if caches.hasScanned && caches.found.isEmpty {
-                    ContentUnavailableView("Önbellek bulunamadı", systemImage: "checkmark.circle",
-                                           description: Text("Hiçbir geliştirici önbelleği 1 MB'ı geçmiyor."))
+                    ContentUnavailableView(L("Önbellek bulunamadı", "No caches found"), systemImage: "checkmark.circle",
+                                           description: Text(L("Hiçbir geliştirici önbelleği 1 MB'ı geçmiyor.", "No developer cache is larger than 1 MB.")))
                 } else if groups.isEmpty {
                     ContentUnavailableView.search(text: query)
                 } else {
@@ -47,43 +47,45 @@ struct CachesView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             ActionBar {
-                Button("Güvenlileri seç") { caches.selectAllSafe() }
-                Button("Seçimi kaldır") { caches.selection.removeAll() }.disabled(caches.selection.isEmpty)
+                Button(L("Güvenlileri seç", "Select safe items")) { caches.selectAllSafe() }
+                Button(L("Seçimi kaldır", "Deselect all")) { caches.selection.removeAll() }.disabled(caches.selection.isEmpty)
             } trailing: {
                 if caches.isCleaning { ProgressView().controlSize(.small) }
                 if caches.selection.isEmpty {
-                    Text("Seçim yok").foregroundStyle(.tertiary)
+                    Text(L("Seçim yok", "Nothing selected")).foregroundStyle(.tertiary)
                 } else {
-                    Text("\(caches.selection.count) öğe · ")
+                    Text(L("\(caches.selection.count) öğe · ", caches.selection.count == 1 ? "1 item · " : "\(caches.selection.count) items · "))
                         .foregroundStyle(.secondary)
                     + Text(caches.selectedSize.fileSizeText).fontWeight(.semibold).foregroundStyle(.primary)
                 }
                 Button {
                     confirming = true
                 } label: {
-                    Label("Temizle…", systemImage: "trash")
+                    Label(L("Temizle…", "Clean…"), systemImage: "trash")
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(Brand.cyan)
                 .disabled(caches.selection.isEmpty || caches.isCleaning)
             }
         }
-        .navigationTitle("Önbellekler")
-        .searchable(text: $query, placement: .toolbar, prompt: "Önbellek ara")
-        .navigationSubtitle(caches.hasScanned ? "\(caches.found.count) öğe · \(caches.totalSize.fileSizeText)" : "taranıyor…")
+        .navigationTitle(L("Önbellekler", "Caches"))
+        .searchable(text: $query, placement: .toolbar, prompt: L("Önbellek ara", "Search caches"))
+        .navigationSubtitle(caches.hasScanned ? L("\(caches.found.count) öğe · \(caches.totalSize.fileSizeText)",
+                                                              "\(caches.found.count == 1 ? "1 item" : "\(caches.found.count) items") · \(caches.totalSize.fileSizeText)")
+                                               : L("taranıyor…", "scanning…"))
         .toolbar {
             Button {
                 Task { await caches.scan(); state.refreshVolume() }
             } label: {
-                if caches.isScanning { ProgressView().controlSize(.small) } else { Label("Yeniden tara", systemImage: "arrow.clockwise") }
+                if caches.isScanning { ProgressView().controlSize(.small) } else { Label(L("Yeniden tara", "Rescan"), systemImage: "arrow.clockwise") }
             }
             .disabled(caches.isScanning)
-            .help("Yeniden tara")
+            .help(L("Yeniden tara", "Rescan"))
         }
         .sheet(isPresented: $confirming) {
             CleanupConfirmation(lines: caches.selectedEntries.map {
                 .init(id: $0.id, title: $0.item.name,
-                      subtitle: $0.item.command != nil ? "Komut: \($0.item.command!.arguments.joined(separator: " "))"
+                      subtitle: $0.item.command != nil ? L("Komut: ", "Command: ") + "\($0.item.command!.arguments.joined(separator: " "))"
                                                       : $0.urls.map(\.tildePath).joined(separator: ", "),
                       size: $0.size, safety: $0.item.safety)
             }) { toTrash in
@@ -115,13 +117,13 @@ private struct EcosystemCard: View {
                     }
                 ))
                 .labelsHidden().toggleStyle(.checkbox)
-                .help(allSelected ? "Bu gruptaki seçimi kaldır" : "Bu gruptakilerin tümünü seç")
+                .help(allSelected ? L("Bu gruptaki seçimi kaldır", "Deselect this group") : L("Bu gruptakilerin tümünü seç", "Select everything in this group"))
 
                 IconTile(symbol: ecosystem.symbol, tint: ecosystem.tint, size: 30)
                 VStack(alignment: .leading, spacing: 5) {
                     HStack(alignment: .firstTextBaseline) {
-                        Text(ecosystem.rawValue).font(.headline)
-                        Text("\(entries.count) öğe").font(.caption).foregroundStyle(.secondary)
+                        Text(ecosystem.title).font(.headline)
+                        Text(L("\(entries.count) öğe", entries.count == 1 ? "1 item" : "\(entries.count) items")).font(.caption).foregroundStyle(.secondary)
                         Spacer(minLength: 8)
                         Text(total.fileSizeText).numeral(15, weight: .semibold)
                     }
@@ -170,7 +172,7 @@ private struct CacheRow: View {
                 Text(entry.item.detail).font(.callout).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 Text(entry.item.command != nil
-                     ? "Komut: \(entry.item.command!.arguments.joined(separator: " "))"
+                     ? L("Komut: ", "Command: ") + "\(entry.item.command!.arguments.joined(separator: " "))"
                      : entry.urls.map(\.tildePath).joined(separator: " · "))
                     .font(.caption.monospaced()).foregroundStyle(.tertiary).lineLimit(1).truncationMode(.middle)
             }
@@ -178,11 +180,11 @@ private struct CacheRow: View {
             VStack(alignment: .trailing, spacing: 6) {
                 Text(entry.size.fileSizeText).numeral(15, weight: .semibold).fixedSize()
                 Button { revealInFinder(entry.urls) } label: {
-                    Label("Finder'da göster", systemImage: "magnifyingglass").labelStyle(.iconOnly)
+                    Label(L("Finder'da göster", "Show in Finder"), systemImage: "magnifyingglass").labelStyle(.iconOnly)
                 }
                 .buttonStyle(.borderless)
                 .foregroundStyle(.secondary)
-                .help("Finder'da göster")
+                .help(L("Finder'da göster", "Show in Finder"))
                 .opacity(hovering ? 1 : 0)
             }
         }

@@ -24,20 +24,20 @@ struct OverviewView: View {
             }
             .padding(22)
         }
-        .navigationTitle("Genel Bakış")
+        .navigationTitle(L("Genel Bakış", "Overview"))
         .toolbar {
             Button {
                 Task { await state.scanAll() }
             } label: {
-                if isScanning { ProgressView().controlSize(.small) } else { Label("Yeniden tara", systemImage: "arrow.clockwise") }
+                if isScanning { ProgressView().controlSize(.small) } else { Label(L("Yeniden tara", "Rescan"), systemImage: "arrow.clockwise") }
             }
             .disabled(isScanning)
-            .help("Yeniden tara")
+            .help(L("Yeniden tara", "Rescan"))
         }
         .sheet(isPresented: $confirming) {
             CleanupConfirmation(lines: caches.selectedEntries.map {
                 .init(id: $0.id, title: $0.item.name,
-                      subtitle: $0.item.command != nil ? "Komut: \($0.item.command!.arguments.joined(separator: " "))"
+                      subtitle: $0.item.command != nil ? L("Komut: ", "Command: ") + "\($0.item.command!.arguments.joined(separator: " "))"
                                                       : $0.urls.map(\.tildePath).joined(separator: ", "),
                       size: $0.size, safety: $0.item.safety)
             }) { toTrash in
@@ -64,9 +64,9 @@ struct OverviewView: View {
                 .init(value: free, color: Brand.teal),
             ], total: total, lineWidth: 16, track: .white.opacity(0.08)) {
                 VStack(spacing: 2) {
-                    Text(v.map { Int((Double($0.available) / Double($0.total)) * 100) } ?? 0, format: .percent)
+                    Text(v.map { Int((Double($0.available) / Double($0.total)) * 100) } ?? 0, format: .percent.locale(AppLanguage.locale))
                         .numeral(28).foregroundStyle(.white)
-                    Text("boş").font(.caption).foregroundStyle(.white.opacity(0.7))
+                    Text(L("boş", "free")).font(.caption).foregroundStyle(.white.opacity(0.7))
                 }
             }
             .frame(width: 148, height: 148)
@@ -76,7 +76,8 @@ struct OverviewView: View {
                     Image(systemName: "internaldrive.fill").font(.caption)
                     Text("Macintosh HD").font(.caption.weight(.semibold))
                     Text("·").font(.caption)
-                    Text("\(v?.available.fileSizeText ?? "—") boş / \(v?.total.fileSizeText ?? "—")")
+                    Text(L("\(v?.available.fileSizeText ?? "—") boş / \(v?.total.fileSizeText ?? "—")",
+                            "\(v?.available.fileSizeText ?? "—") free of \(v?.total.fileSizeText ?? "—")"))
                         .font(.caption.monospacedDigit())
                 }
                 .foregroundStyle(.white.opacity(0.75))
@@ -85,19 +86,20 @@ struct OverviewView: View {
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                         Text(reclaimable.fileSizeText).numeral(38).foregroundStyle(.white)
                             .contentTransition(.numericText())
-                        Text("kazanılabilir").font(.title3.weight(.medium)).foregroundStyle(.white.opacity(0.85))
+                        Text(L("kazanılabilir", "can be freed")).font(.title3.weight(.medium)).foregroundStyle(.white.opacity(0.85))
                     }
                     .lineLimit(1).minimumScaleFactor(0.7)
-                    Text("Güvenle temizlenebilir önbellek \(state.caches.safeSize.fileSizeText) · 30+ gündür dokunulmamış proje bağımlılıkları \(staleProjects.fileSizeText)")
+                    Text(L("Güvenle temizlenebilir önbellek \(state.caches.safeSize.fileSizeText) · 30+ gündür dokunulmamış proje bağımlılıkları \(staleProjects.fileSizeText)",
+                            "Caches safe to clean \(state.caches.safeSize.fileSizeText) · Project dependencies untouched for 30+ days \(staleProjects.fileSizeText)"))
                         .font(.callout).foregroundStyle(.white.opacity(0.7))
                         .fixedSize(horizontal: false, vertical: true)
                 } else {
                     HStack(spacing: 10) {
                         ProgressView().controlSize(.small).tint(.white)
-                        Text("Önbellekler ve projeler taranıyor…").font(.title3.weight(.medium)).foregroundStyle(.white.opacity(0.85))
+                        Text(L("Önbellekler ve projeler taranıyor…", "Scanning caches and projects…")).font(.title3.weight(.medium)).foregroundStyle(.white.opacity(0.85))
                     }
                     .frame(height: 46)
-                    Text("Diskteki geliştirici önbellekleri ve bağımlılık klasörleri ölçülüyor.")
+                    Text(L("Diskteki geliştirici önbellekleri ve bağımlılık klasörleri ölçülüyor.", "Measuring developer caches and dependency folders on disk."))
                         .font(.callout).foregroundStyle(.white.opacity(0.6))
                 }
 
@@ -106,27 +108,28 @@ struct OverviewView: View {
                         state.caches.selectAllSafe()
                         confirming = true
                     } label: {
-                        Label("Güvenlileri temizle…", systemImage: "sparkles")
+                        Label(L("Güvenlileri temizle…", "Clean safe items…"), systemImage: "sparkles")
                     }
                     .buttonStyle(HeroButtonStyle())
                     .disabled(state.caches.safeSize == 0 || state.caches.isCleaning)
                     .opacity(state.caches.safeSize == 0 ? 0.5 : 1)
 
-                    Button("Ayrıntılar") { section = .caches }
+                    Button(L("Ayrıntılar", "Details")) { section = .caches }
                         .buttonStyle(HeroSecondaryButtonStyle())
                 }
                 .padding(.top, 2)
 
                 HStack(spacing: 14) {
-                    heroLegend(.white.opacity(0.35), "Diğer")
-                    heroLegend(Brand.amber, "Geliştirici önbellekleri")
-                    heroLegend(Brand.cyan, "Proje bağımlılıkları")
-                    heroLegend(Brand.teal, "Boş")
+                    heroLegend(.white.opacity(0.35), L("Diğer", "Other"))
+                    heroLegend(Brand.amber, L("Geliştirici önbellekleri", "Developer caches"))
+                    heroLegend(Brand.cyan, L("Proje bağımlılıkları", "Project dependencies"))
+                    heroLegend(Brand.teal, L("Boş", "Free"))
                 }
                 .padding(.top, 4)
 
                 if lowDisk {
-                    Label("Disk %90'dan fazla dolu. macOS'un swap ve güncellemeler için boş alana ihtiyacı var.",
+                    Label(L("Disk %90'dan fazla dolu. macOS'un swap ve güncellemeler için boş alana ihtiyacı var.",
+                            "The disk is more than 90% full. macOS needs free space for swap and updates."),
                           systemImage: "exclamationmark.triangle.fill")
                         .font(.callout).foregroundStyle(Brand.amber)
                 }
@@ -166,23 +169,23 @@ struct OverviewView: View {
     private var tiles: some View {
         let m = state.memory.snapshot
         return HStack(spacing: 12) {
-            StatTile(symbol: "archivebox.fill", title: "Güvenli önbellekler",
+            StatTile(symbol: "archivebox.fill", title: L("Güvenli önbellekler", "Safe caches"),
                      value: state.caches.hasScanned ? state.caches.safeSize.fileSizeText : "…",
-                     caption: state.caches.hasScanned ? "toplam bulunan \(state.caches.totalSize.fileSizeText)" : "taranıyor",
+                     caption: state.caches.hasScanned ? L("toplam bulunan \(state.caches.totalSize.fileSizeText)", "\(state.caches.totalSize.fileSizeText) found in total") : L("taranıyor", "scanning"),
                      tint: Brand.amber) { section = .caches }
-            StatTile(symbol: "folder.fill", title: "Eski bağımlılıklar",
+            StatTile(symbol: "folder.fill", title: L("Eski bağımlılıklar", "Old dependencies"),
                      value: state.projects.hasScanned ? staleProjects.fileSizeText : "…",
-                     caption: state.projects.hasScanned ? "30+ gün · toplam \(state.projects.totalSize.fileSizeText)" : "projeler taranıyor",
+                     caption: state.projects.hasScanned ? L("30+ gün · toplam \(state.projects.totalSize.fileSizeText)", "30+ days · \(state.projects.totalSize.fileSizeText) total") : L("projeler taranıyor", "scanning projects"),
                      tint: Brand.cyan) { section = .projects }
-            StatTile(symbol: "square.grid.2x2.fill", title: "Atıl uygulamalar",
+            StatTile(symbol: "square.grid.2x2.fill", title: L("Atıl uygulamalar", "Unused apps"),
                      value: state.apps.hasScanned ? "\(state.apps.unused(olderThan: 90).count)" : "…",
                      caption: state.apps.hasScanned
-                        ? "90+ gündür açılmamış · \(state.apps.unusedSize(olderThan: 90).fileSizeText)"
-                        : "uygulamalar taranıyor",
+                        ? L("90+ gündür açılmamış · \(state.apps.unusedSize(olderThan: 90).fileSizeText)", "Unused 90+ days · \(state.apps.unusedSize(olderThan: 90).fileSizeText)")
+                        : L("uygulamalar taranıyor", "scanning apps"),
                      tint: Brand.violetInk) { section = .apps }
-            StatTile(symbol: m.pressure.symbol, title: "Bellek basıncı",
+            StatTile(symbol: m.pressure.symbol, title: L("Bellek basıncı", "Memory pressure"),
                      value: m.pressure.title,
-                     caption: "swap \(m.swapUsed.memoryText) · RAM \(m.used.memoryText) / \(m.physical.memoryText)",
+                     caption: "swap \(m.swapUsed.memoryText) · RAM \(m.used.memoryText)",
                      tint: m.pressure.color) { section = .memory }
         }
     }
@@ -197,15 +200,16 @@ struct OverviewView: View {
         let max = Double(rows.first?.1 ?? 1)
 
         return VStack(alignment: .leading, spacing: 10) {
-            SectionTitle(title: "Ekosisteme göre", subtitle: "Önbellekler, araç ailesine göre")
+            SectionTitle(title: L("Ekosisteme göre", "By ecosystem"), subtitle: L("Önbellekler, araç ailesine göre", "Caches by tool family"))
             if !state.caches.hasScanned {
-                ScanningPlaceholder(text: "Taranıyor…", symbol: "archivebox").frame(height: 180)
+                ScanningPlaceholder(text: L("Taranıyor…", "Scanning…"), symbol: "archivebox").frame(height: 180)
             } else if rows.isEmpty {
-                ContentUnavailableView("Önbellek bulunamadı", systemImage: "checkmark.circle", description: Text("Hiçbir geliştirici önbelleği 1 MB'ı geçmiyor."))
+                ContentUnavailableView(L("Önbellek bulunamadı", "No caches found"), systemImage: "checkmark.circle",
+                                       description: Text(L("Hiçbir geliştirici önbelleği 1 MB'ı geçmiyor.", "No developer cache is larger than 1 MB.")))
                     .frame(height: 180)
             } else {
                 ForEach(rows, id: \.0) { eco, size in
-                    MeterRow(symbol: eco.symbol, tint: eco.tint, title: eco.rawValue,
+                    MeterRow(symbol: eco.symbol, tint: eco.tint, title: eco.title,
                              value: Double(size), total: max, valueText: size.fileSizeText)
                 }
             }
@@ -219,12 +223,12 @@ struct OverviewView: View {
     private var biggest: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top) {
-                SectionTitle(title: "En çok yer kaplayanlar", subtitle: "Tek tek en büyük önbellekler")
+                SectionTitle(title: L("En çok yer kaplayanlar", "Largest items"), subtitle: L("Tek tek en büyük önbellekler", "The biggest individual caches"))
                 Spacer()
-                Button("Tümü") { section = .caches }.buttonStyle(.link).font(.callout)
+                Button(L("Tümü", "All")) { section = .caches }.buttonStyle(.link).font(.callout)
             }
             if !state.caches.hasScanned {
-                ScanningPlaceholder(text: "Taranıyor…", symbol: "internaldrive").frame(height: 180)
+                ScanningPlaceholder(text: L("Taranıyor…", "Scanning…"), symbol: "internaldrive").frame(height: 180)
             } else {
                 VStack(spacing: 0) {
                     let top = Array(state.caches.found.sorted { $0.size > $1.size }.prefix(7))
@@ -233,7 +237,7 @@ struct OverviewView: View {
                             IconTile(symbol: entry.item.ecosystem.symbol, tint: entry.item.ecosystem.tint, size: 26)
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(entry.item.name).font(.callout.weight(.medium)).lineLimit(1)
-                                Text(entry.item.ecosystem.rawValue).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                                Text(entry.item.ecosystem.title).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             if entry.item.safety == .caution { SafetyBadge(safety: .caution) }

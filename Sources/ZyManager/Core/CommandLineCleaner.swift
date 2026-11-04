@@ -5,7 +5,7 @@ import Foundation
 enum CommandLineCleaner {
     static func run(id: String) -> Int32 {
         guard let item = CacheCatalog.items.first(where: { $0.id == id }) else {
-            print("Bilinmeyen öğe: \(id). Geçerli öğeler: \(CacheCatalog.items.map(\.id).joined(separator: ", "))")
+            print(L("Bilinmeyen öğe", "Unknown item") + ": \(id). " + L("Geçerli öğeler", "Valid items") + ": \(CacheCatalog.items.map(\.id).joined(separator: ", "))")
             return 2
         }
         let urls = item.locate()
@@ -13,10 +13,10 @@ enum CommandLineCleaner {
         print("\(item.name): \(size.fileSizeText) · \(urls.map(\.tildePath).joined(separator: ", "))")
 
         let failures = Cleaner.clean(item, urls: urls, toTrash: false)
-        failures.forEach { print("Hata: \($0)") }
+        failures.forEach { print(L("Hata", "Error") + ": \($0)") }
 
         let remaining = item.locate().reduce(0) { $0 + DiskUsage.allocatedSize(of: $1) }
-        print("Kalan: \(remaining.fileSizeText)")
+        print(L("Kalan", "Remaining") + ": \(remaining.fileSizeText)")
         return failures.isEmpty ? 0 : 1
     }
 }

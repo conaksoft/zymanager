@@ -2,6 +2,12 @@ import AppKit
 import Foundation
 import Observation
 
+/// Outcome of a cleanup or uninstall, shown in the result banner. Failures stay on screen until dismissed.
+struct ResultMessage: Equatable {
+    var text: String
+    var isError = false
+}
+
 @MainActor @Observable
 final class CacheStore {
     struct Entry: Identifiable {
@@ -16,7 +22,7 @@ final class CacheStore {
     private(set) var isScanning = false
     private(set) var isCleaning = false
     private(set) var hasScanned = false
-    var lastMessage: String?
+    var lastMessage: ResultMessage?
 
     /// Anything under 1 MB is an empty folder, not worth a row.
     var found: [Entry] { entries.filter { $0.size >= 1_000_000 } }
@@ -64,8 +70,10 @@ final class CacheStore {
         }.value
         let total = targets.reduce(0) { $0 + $1.size }
         lastMessage = failures.isEmpty
-            ? "\(total.fileSizeText) temizlendi\(toTrash ? " (Çöp Kutusu'na taşındı)" : "")."
-            : "Bazı öğeler temizlenemedi:\n" + failures.joined(separator: "\n")
+            ? ResultMessage(text: L("\(total.fileSizeText) temizlendi", "\(total.fileSizeText) cleaned")
+                + (toTrash ? L(" (Çöp Kutusu'na taşındı).", " (moved to the Trash).") : "."))
+            : ResultMessage(text: L("Bazı öğeler temizlenemedi:", "Some items couldn't be cleaned:") + "\n"
+                + failures.joined(separator: "\n"), isError: true)
         selection.removeAll()
         isCleaning = false
         await scan()
@@ -84,7 +92,7 @@ final class ProjectStore {
     private(set) var isScanning = false
     private(set) var isCleaning = false
     private(set) var hasScanned = false
-    var lastMessage: String?
+    var lastMessage: ResultMessage?
 
     init() {
         if let saved = UserDefaults.standard.stringArray(forKey: Self.rootsKey) {
@@ -152,8 +160,10 @@ final class ProjectStore {
         let failures = await Task.detached { Cleaner.remove(targets.map(\.url), toTrash: toTrash) }.value
         let total = targets.reduce(0) { $0 + $1.size }
         lastMessage = failures.isEmpty
-            ? "\(targets.count) klasör, \(total.fileSizeText) temizlendi."
-            : "Bazı klasörler silinemedi:\n" + failures.joined(separator: "\n")
+            ? ResultMessage(text: L("\(targets.count) klasör, \(total.fileSizeText) temizlendi.",
+                                    "\(targets.count) folders, \(total.fileSizeText) cleaned."))
+            : ResultMessage(text: L("Bazı klasörler silinemedi:", "Some folders couldn't be deleted:") + "\n"
+                + failures.joined(separator: "\n"), isError: true)
         let removed = Set(targets.map(\.id))
         artifacts.removeAll { removed.contains($0.id) && FileManager.default.fileExists(atPath: $0.url.path) == false }
         selection.removeAll()
@@ -201,7 +211,7 @@ final class AppsStore {
     private(set) var isScanning = false
     private(set) var hasScanned = false
     private(set) var uninstallingID: String?
-    var lastMessage: String?
+    var lastMessage: ResultMessage?
 
     var totalSize: Int64 { apps.reduce(0) { $0 + $1.size } }
 
@@ -261,16 +271,22 @@ final class AppsStore {
         defer { uninstallingID = nil }
 
         guard await AppInventory.quitIfRunning(app) else {
-            lastMessage = "\(app.name) kapanmadı. Uygulamayı kaydedip kapatın, sonra tekrar deneyin."
+            lastMessage = ResultMessage(text: L("\(app.name) kapanmadı. Uygulamayı kaydedip kapatın, sonra tekrar deneyin.",
+                                                "\(app.name) didn't quit. Save your work and quit it, then try again."),
+                                        isError: true)
             return
         }
         let failures = await AppInventory.uninstall(app, leftovers: chosen, toTrash: toTrash)
         let total = app.size + chosen.reduce(0) { $0 + $1.size }
         if failures.isEmpty {
-            lastMessage = "\(app.name) kaldırıldı (\(total.fileSizeText)). Uygulama Çöp Kutusu'nda; "
-                + (toTrash || chosen.isEmpty ? "alan, Çöp Kutusu boşaltılınca açılır." : "kalıntı dosyalar silindi.")
+            lastMessage = ResultMessage(text: L("\(app.name) kaldırıldı (\(total.fileSizeText)). Uygulama Çöp Kutusu'nda; ",
+                                                "\(app.name) was uninstalled (\(total.fileSizeText)). The app is in the Trash; ")
+                + (toTrash || chosen.isEmpty
+                    ? L("alan, Çöp Kutusu boşaltılınca açılır.", "the space is freed when you empty the Trash.")
+                    : L("kalıntı dosyalar silindi.", "its leftover files were deleted.")))
         } else {
-            lastMessage = "Kaldırma tamamlanamadı:\n" + failures.joined(separator: "\n")
+            lastMessage = ResultMessage(text: L("Kaldırma tamamlanamadı:", "Uninstall didn't finish:") + "\n"
+                + failures.joined(separator: "\n"), isError: true)
         }
         if !FileManager.default.fileExists(atPath: app.url.path) {
             apps.removeAll { $0.id == app.id }

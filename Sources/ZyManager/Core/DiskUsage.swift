@@ -57,17 +57,29 @@ enum DiskUsage {
 }
 
 extension Int64 {
-    private static func formatter(_ style: ByteCountFormatter.CountStyle) -> ByteCountFormatter {
-        let f = ByteCountFormatter()
-        f.countStyle = style
-        f.allowsNonnumericFormatting = false // "0 KB" instead of "Zero KB"
-        return f
-    }
-    private static let fileFormatter = formatter(.file)
-    private static let memoryFormatter = formatter(.memory)
+    /// Disk sizes in decimal units like Finder ("473.5 MB" / "473,5 MB").
+    var fileSizeText: String { Self.sizeText(self, base: 1000) }
+    /// Memory sizes in binary units like Activity Monitor.
+    var memoryText: String { Self.sizeText(self, base: 1024) }
 
-    var fileSizeText: String { Self.fileFormatter.string(fromByteCount: self) }
-    var memoryText: String { Self.memoryFormatter.string(fromByteCount: self) }
+    /// ByteCountFormatter always follows the Mac's region, so English UI on a Turkish Mac showed "7,59 GB".
+    /// This formats with the app's own language instead: bytes and KB without decimals, MB with one, GB+ with two.
+    private static func sizeText(_ bytes: Int64, base: Double) -> String {
+        let units = [L("bayt", "bytes"), "KB", "MB", "GB", "TB"]
+        var value = Double(bytes.magnitude)
+        var unit = 0
+        while value >= base, unit < units.count - 1 {
+            value /= base
+            unit += 1
+        }
+        let f = NumberFormatter()
+        f.locale = AppLanguage.locale
+        f.numberStyle = .decimal
+        f.minimumFractionDigits = 0
+        f.maximumFractionDigits = [0, 0, 1, 2, 2][unit]
+        let number = f.string(from: NSNumber(value: value)) ?? String(value)
+        return (bytes < 0 ? "-" : "") + number + " " + units[unit]
+    }
 }
 
 extension URL {
