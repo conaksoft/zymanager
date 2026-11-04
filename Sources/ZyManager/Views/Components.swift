@@ -345,20 +345,19 @@ struct StatTile: View {
 // MARK: - States
 
 /// Spinner with a gently pulsing symbol, for scan-in-progress areas.
+/// The pulse is a symbol effect rather than a `repeatForever` animation started in `onAppear`:
+/// that one also captured the view's first layout position and kept sliding the icon diagonally.
 struct ScanningPlaceholder: View {
     let text: String
     var symbol: String = "internaldrive"
-    @State private var pulse = false
 
     var body: some View {
         VStack(spacing: 12) {
             ZStack {
                 Circle().fill(Brand.cyan.opacity(0.12)).frame(width: 64, height: 64)
-                    .scaleEffect(pulse ? 1.12 : 0.92)
                 Image(systemName: symbol).font(.system(size: 26, weight: .medium)).foregroundStyle(Brand.cyan)
+                    .symbolEffect(.pulse, options: .repeating)
             }
-            .animation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true), value: pulse)
-            .onAppear { pulse = true }
             ProgressView().controlSize(.small)
             Text(text).font(.callout).foregroundStyle(.secondary)
         }
