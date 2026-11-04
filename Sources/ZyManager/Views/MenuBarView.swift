@@ -29,8 +29,8 @@ struct MenuBarView: View {
                     .font(.title3)
                     .foregroundStyle(s.pressure.color)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("Bellek basıncı \(s.pressure.title.lowercased())").font(.headline)
-                    Text("\(s.used.memoryText) / \(s.physical.memoryText) kullanımda")
+                    Text(pressureHeadline).font(.headline)
+                    Text(L("\(s.used.memoryText) / \(s.physical.memoryText) kullanımda", "\(s.used.memoryText) of \(s.physical.memoryText) in use"))
                         .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -48,16 +48,16 @@ struct MenuBarView: View {
             VStack(spacing: 6) {
                 row("Swap", s.swapUsed.memoryText, tint: swapHeavy ? Brand.amberInk : .primary)
                 if let v = state.volume {
-                    row("Disk boş", v.available.fileSizeText, tint: .primary)
+                    row(L("Disk boş", "Free on disk"), v.available.fileSizeText, tint: .primary)
                 }
                 if state.caches.hasScanned {
-                    row("Kazanılabilir", (state.caches.safeSize + state.projects.staleSize(olderThan: 30)).fileSizeText, tint: Brand.tealInk)
+                    row(L("Kazanılabilir", "Reclaimable"), (state.caches.safeSize + state.projects.staleSize(olderThan: 30)).fileSizeText, tint: Brand.tealInk)
                 }
             }
 
             Divider()
 
-            Text("En çok bellek kullananlar").font(.caption.weight(.medium)).foregroundStyle(.secondary)
+            Text(L("En çok bellek kullananlar", "Using the most memory")).font(.caption.weight(.medium)).foregroundStyle(.secondary)
             let apps = Array(s.apps.prefix(5))
             let maxFootprint = Double(apps.first?.footprint ?? 1)
             VStack(spacing: 7) {
@@ -80,18 +80,27 @@ struct MenuBarView: View {
                     openWindow(id: "main")
                     NSApp.activate(ignoringOtherApps: true)
                 } label: {
-                    Label("ZyManager'ı aç", systemImage: "macwindow")
+                    Label(L("ZyManager'ı aç", "Open ZyManager"), systemImage: "macwindow")
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(Brand.cyan)
                 .controlSize(.small)
                 Spacer()
-                Button("Çık") { NSApp.terminate(nil) }.controlSize(.small)
+                Button(L("Çık", "Quit")) { NSApp.terminate(nil) }.controlSize(.small)
             }
         }
         .padding(14)
         .frame(width: 300)
         .onAppear { state.refreshVolume() }
+    }
+
+    /// "Bellek basıncı normal" reads fine in Turkish; English needs its own phrasing per state.
+    private var pressureHeadline: String {
+        switch s.pressure {
+        case .normal: L("Bellek basıncı normal", "Memory pressure is normal")
+        case .warning: L("Bellek basıncı sıkışık", "Memory is under pressure")
+        case .critical: L("Bellek basıncı kritik", "Memory pressure is critical")
+        }
     }
 
     private func row(_ title: String, _ value: String, tint: Color) -> some View {

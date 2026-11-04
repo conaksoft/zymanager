@@ -7,8 +7,8 @@ enum MemoryPressure: Sendable {
     var title: String {
         switch self {
         case .normal: "Normal"
-        case .warning: "Sıkışık"
-        case .critical: "Kritik"
+        case .warning: L("Sıkışık", "Under pressure")
+        case .critical: L("Kritik", "Critical")
         }
     }
 }
@@ -119,7 +119,7 @@ enum MemorySampler {
     }
 
     private static func friendlyName(_ process: String) -> String {
-        if process.hasPrefix("qemu-system") { return "Android Emülatörü (\(process))" }
+        if process.hasPrefix("qemu-system") { return L("Android Emülatörü", "Android Emulator") + " (\(process))" }
         switch process {
         case "node": return "Node.js (node)"
         case "dart", "dartaotruntime", "dartvm": return "Dart / Flutter (\(process))"

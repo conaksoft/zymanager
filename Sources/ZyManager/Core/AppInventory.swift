@@ -19,12 +19,37 @@ struct InstalledApp: Identifiable, Sendable {
 /// A file or folder an app left in ~/Library (settings, caches, containers, saved state…).
 struct AppLeftover: Identifiable, Sendable {
     let url: URL
-    let kind: String
+    let kind: LeftoverKind
     /// Matched only by app name, not bundle id — worth a second look before deleting.
     let matchedByName: Bool
     var size: Int64 = 0
 
     var id: String { url.path }
+}
+
+enum LeftoverKind: String, CaseIterable, Sendable {
+    case appData, cache, container, groupContainer, preferences, savedState
+    case httpStorage, webData, cookies, logs, launchAgent, scripts
+
+    var title: String {
+        switch self {
+        case .appData: L("Uygulama verisi", "App data")
+        case .cache: L("Önbellek", "Cache")
+        case .container: L("Sandbox kapsayıcısı", "Sandbox container")
+        case .groupContainer: L("Paylaşılan kapsayıcı", "Shared container")
+        case .preferences: L("Ayarlar", "Preferences")
+        case .savedState: L("Pencere durumu", "Window state")
+        case .httpStorage: L("Ağ verisi", "Network data")
+        case .webData: L("Web verisi", "Web data")
+        case .cookies: L("Çerezler", "Cookies")
+        case .logs: L("Loglar", "Logs")
+        case .launchAgent: L("Başlangıç öğesi", "Launch agent")
+        case .scripts: L("Betikler", "Scripts")
+        }
+    }
+
+    /// Settings, profiles and sessions live here (e.g. Chrome profiles); they're gone if the app is reinstalled later.
+    var isUserData: Bool { self == .appData }
 }
 
 enum AppInventory {
@@ -78,26 +103,26 @@ enum AppInventory {
 
     // MARK: Leftovers
 
-    private static let byBundleID: [(folder: String, kind: String)] = [
-        ("Application Support", "Uygulama verisi"),
-        ("Caches", "Önbellek"),
-        ("Containers", "Sandbox kapsayıcısı"),
-        ("Group Containers", "Paylaşılan kapsayıcı"),
-        ("Preferences", "Ayarlar"),
-        ("Saved Application State", "Pencere durumu"),
-        ("HTTPStorages", "Ağ verisi"),
-        ("WebKit", "Web verisi"),
-        ("Cookies", "Çerezler"),
-        ("Logs", "Loglar"),
-        ("LaunchAgents", "Başlangıç öğesi"),
-        ("Application Scripts", "Betikler"),
+    private static let byBundleID: [(folder: String, kind: LeftoverKind)] = [
+        ("Application Support", .appData),
+        ("Caches", .cache),
+        ("Containers", .container),
+        ("Group Containers", .groupContainer),
+        ("Preferences", .preferences),
+        ("Saved Application State", .savedState),
+        ("HTTPStorages", .httpStorage),
+        ("WebKit", .webData),
+        ("Cookies", .cookies),
+        ("Logs", .logs),
+        ("LaunchAgents", .launchAgent),
+        ("Application Scripts", .scripts),
     ]
 
     /// Folders where an app's own name is a common folder name too (e.g. ~/Library/Application Support/Slack).
-    private static let byName: [(folder: String, kind: String)] = [
-        ("Application Support", "Uygulama verisi"),
-        ("Caches", "Önbellek"),
-        ("Logs", "Loglar"),
+    private static let byName: [(folder: String, kind: LeftoverKind)] = [
+        ("Application Support", .appData),
+        ("Caches", .cache),
+        ("Logs", .logs),
     ]
 
     static func leftovers(for app: InstalledApp) -> [AppLeftover] {

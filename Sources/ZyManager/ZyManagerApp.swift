@@ -4,6 +4,8 @@ import SwiftUI
 struct ZyManagerApp: App {
     @State private var state = AppState()
     @State private var navigation = Navigation()
+    /// Changing the language rebuilds the views (`.id`) so every `L(...)` text is read again.
+    @AppStorage(AppLanguage.storageKey) private var language = AppLanguage.auto.rawValue
 
     init() {
         if let i = CommandLine.arguments.firstIndex(of: "--clean"), i + 1 < CommandLine.arguments.count {
@@ -17,21 +19,23 @@ struct ZyManagerApp: App {
                 .environment(state)
                 .environment(navigation)
                 .frame(minWidth: 1120, minHeight: 680)
+                .environment(\.locale, AppLanguage.locale)
+                .id(language)
         }
         .defaultSize(width: 1180, height: 760)
         .commands {
             CommandGroup(replacing: .appInfo) {
-                Button("ZyManager Hakkında") { navigation.showAbout = true }
+                Button(L("ZyManager Hakkında", "About ZyManager")) { navigation.showAbout = true }
             }
             // ⌘1–⌘5 switch sections, ⌘R rescans the one on screen.
             CommandGroup(after: .sidebar) {
                 Divider()
                 ForEach(Array(SidebarSection.allCases.enumerated()), id: \.element) { i, s in
-                    Button(s.rawValue) { navigation.section = s }
+                    Button(s.title) { navigation.section = s }
                         .keyboardShortcut(KeyEquivalent(Character(String(i + 1))), modifiers: .command)
                 }
                 Divider()
-                Button("Yeniden tara") { Task { await rescan(navigation.section ?? .overview) } }
+                Button(L("Yeniden tara", "Rescan")) { Task { await rescan(navigation.section ?? .overview) } }
                     .keyboardShortcut("r", modifiers: .command)
             }
         }
@@ -39,10 +43,16 @@ struct ZyManagerApp: App {
         MenuBarExtra {
             MenuBarView()
                 .environment(state)
+                .environment(\.locale, AppLanguage.locale)
+                .id(language)
         } label: {
             MenuBarLabel(snapshot: state.memory.snapshot)
         }
         .menuBarExtraStyle(.window)
+
+        Settings {
+            SettingsView()
+        }
     }
 
     private func rescan(_ section: SidebarSection) async {
@@ -63,7 +73,18 @@ enum SidebarSection: String, CaseIterable, Identifiable {
     case apps = "Uygulamalar"
     case memory = "Bellek"
 
+    /// Raw values stay Turkish: they're the saved last section and the `-initialSection` argument.
     var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .overview: L("Genel Bakış", "Overview")
+        case .caches: L("Önbellekler", "Caches")
+        case .projects: L("Projeler", "Projects")
+        case .apps: L("Uygulamalar", "Apps")
+        case .memory: L("Bellek", "Memory")
+        }
+    }
 
     var symbol: String {
         switch self {
@@ -113,7 +134,7 @@ struct ContentView: View {
             VStack(spacing: 0) {
                 List(SidebarSection.allCases, selection: $navigation.section) { s in
                     HStack {
-                        Label(s.rawValue, systemImage: s.symbol)
+                        Label(s.title, systemImage: s.symbol)
                         Spacer(minLength: 6)
                         if let value = sidebarValue(for: s) {
                             Text(value.text)
@@ -162,7 +183,7 @@ struct ContentView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .help("ZyManager Hakkında")
+        .help(L("ZyManager Hakkında", "About ZyManager"))
     }
 
     /// Small live figure shown next to each sidebar item.
@@ -193,7 +214,7 @@ extension Bundle {
     var buildNumber: String { infoDictionary?["CFBundleVersion"] as? String ?? "—" }
 }
 
-/// Small "Hakkında" sheet: icon, version, company.
+/// Small About sheet: icon, version, company.
 struct AboutSheet: View {
     @Environment(\.dismiss) private var dismiss
 
@@ -204,15 +225,16 @@ struct AboutSheet: View {
                 .shadow(color: Brand.indigo.opacity(0.3), radius: 12, y: 6)
             VStack(spacing: 4) {
                 Text("ZyManager").font(.title2.weight(.bold))
-                Text("Sürüm \(Bundle.main.shortVersion) (\(Bundle.main.buildNumber))")
+                Text(L("Sürüm", "Version") + " \(Bundle.main.shortVersion) (\(Bundle.main.buildNumber))")
                     .font(.callout.monospacedDigit()).foregroundStyle(.secondary)
             }
-            Text("Geliştiriciler için depolama ve bellek yöneticisi. Yalnızca yeniden üretilebilir dosyaları gösterir; hiçbir şeyi sormadan silmez.")
+            Text(L("Geliştiriciler için depolama ve bellek yöneticisi. Yalnızca yeniden üretilebilir dosyaları gösterir; hiçbir şeyi sormadan silmez.",
+                    "Storage and memory manager for developers. It only shows files that can be recreated, and never deletes anything without asking."))
                 .font(.callout).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
             Text("© Conaksoft").font(.caption).foregroundStyle(.tertiary)
-            Button("Tamam") { dismiss() }
+            Button(L("Tamam", "OK")) { dismiss() }
                 .keyboardShortcut(.defaultAction)
                 .buttonStyle(.borderedProminent)
                 .tint(Brand.cyan)
@@ -220,5 +242,26 @@ struct AboutSheet: View {
         }
         .padding(28)
         .frame(width: 340)
+    }
+}
+
+/// ZyManager > Settings (⌘,): app language.
+struct SettingsView: View {
+    @AppStorage(AppLanguage.storageKey) private var language = AppLanguage.auto.rawValue
+
+    var body: some View {
+        Form {
+            Picker(L("Dil", "Language"), selection: $language) {
+                ForEach(AppLanguage.allCases) { Text($0.pickerTitle).tag($0.rawValue) }
+            }
+            .pickerStyle(.radioGroup)
+            Text(L("Otomatik, Mac'in dili Türkçeyse Türkçe, değilse İngilizce kullanır.",
+                   "Automatic uses Turkish if your Mac's language is Turkish, English otherwise."))
+                .font(.caption).foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(20)
+        .frame(width: 380)
+        .id(language)
     }
 }

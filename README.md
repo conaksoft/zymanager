@@ -21,6 +21,7 @@
 - **Safe by default:** Nothing is deleted without a confirmation screen that lists every folder and the space it frees. You can move items to the Trash instead of deleting them.
 - **RAM and swap monitor:** Memory pressure, used RAM, compressed memory and swap usage, with helper processes grouped under their app (for example all Chrome helpers). When memory is tight it tells you which apps would free the most memory if closed. It never pretends to "free RAM".
 - **Menu bar:** Swap usage always visible, with a compact view of memory, free disk space and reclaimable space.
+- **English and Turkish:** Follows your Mac's language by default; switch between Automatic, Türkçe and English in Settings (⌘,).
 - **Keyboard shortcuts:** ⌘1–⌘5 switch sections, ⌘R rescans the current section, and the cache, project and app lists are searchable.
 
 ## Requirements
@@ -72,7 +73,7 @@ ZyManager is **source available** under the [PolyForm Noncommercial License 1.0.
 
 ## Türkçe Özet
 
-**ZyManager**, [Conaksoft](https://conaksoft.com) tarafından geliştirilen, yazılımcılar için bir macOS depolama ve bellek yöneticisidir. Xcode, Android/Gradle, Flutter, Node.js, Python, PHP ve Homebrew önbelleklerini, projelerdeki `node_modules`, `.dart_tool` ve `build` gibi klasörleri bulur; neyin güvenle silinebileceğini gösterir ve yalnızca onayınızla temizler. Kurulu uygulamaları `~/Library` altındaki kalıntı dosyalarıyla birlikte kaldırabilir, RAM ve swap kullanımını menü çubuğundan izler. Uygulama hiçbir kullanım verisi toplamaz.
+**ZyManager**, [Conaksoft](https://conaksoft.com) tarafından geliştirilen, yazılımcılar için bir macOS depolama ve bellek yöneticisidir. Xcode, Android/Gradle, Flutter, Node.js, Python, PHP ve Homebrew önbelleklerini, projelerdeki `node_modules`, `.dart_tool` ve `build` gibi klasörleri bulur; neyin güvenle silinebileceğini gösterir ve yalnızca onayınızla temizler. Kurulu uygulamaları `~/Library` altındaki kalıntı dosyalarıyla birlikte kaldırabilir, RAM ve swap kullanımını menü çubuğundan izler. Türkçe ve İngilizce desteklenir; dil Ayarlar'dan (⌘,) değiştirilebilir. Uygulama hiçbir kullanım verisi toplamaz.
 
 **Sorumluluk reddi:** ZyManager "olduğu gibi" sunulur ve hiçbir garanti verilmez. Yürürlükteki mevzuatın izin verdiği en geniş ölçüde Conaksoft, uygulamanın kullanımından doğan veri kaybı ve hizmet kesintisi dahil hiçbir doğrudan veya dolaylı zarardan sorumlu değildir. Uygulama yalnızca sizin seçip onayladığınız öğeleri siler; "Dikkat" işaretli öğeler kendiliğinden geri gelmez. Önemli verilerinizin her zaman yedeğini alın. Uygulamayı kurarak veya kullanarak bu koşulları kabul etmiş sayılırsınız.
 
