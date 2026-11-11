@@ -204,7 +204,8 @@ struct ContentView: View {
             let m = state.memory.snapshot
             if m.pressure != .normal { return (m.pressure.title, m.pressure.color) }
             guard m.swapUsed > 0 else { return nil }
-            return (m.swapUsed.memoryText, m.swapUsed > m.physical / 4 ? Brand.amberInk : .secondary)
+            // Labelled, so the number isn't mistaken for RAM in use.
+            return ("swap \(m.swapUsed.memoryText)", m.swapUsed > m.physical / 4 ? Brand.amberInk : .secondary)
         }
     }
 }
