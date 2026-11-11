@@ -382,17 +382,17 @@ private struct AppDetail: View {
                     }
                     if state.apps.isRunning(app) { RunningBadge() }
                 }
-                HStack(spacing: 6) {
-                    if let version = app.version { Text(L("Sürüm \(version)", "Version \(version)")) }
-                    if let id = app.bundleID {
-                        if app.version != nil { Text("·") }
-                        Text(id).lineLimit(1).truncationMode(.middle)
-                    }
+                if let version = app.version {
+                    Text(L("Sürüm \(version)", "Version \(version)"))
+                        .font(.callout).foregroundStyle(.secondary).lineLimit(1)
                 }
-                .font(.callout).foregroundStyle(.secondary)
-                Text(app.url.tildePath)
-                    .font(.caption.monospaced()).foregroundStyle(.tertiary)
-                    .lineLimit(1).truncationMode(.middle)
+                // Bundle id and path get their own lines: next to the version the id was cut to "com.go…Chrome".
+                ForEach([app.bundleID, app.url.tildePath].compactMap { $0 }, id: \.self) { line in
+                    Text(line)
+                        .font(.caption.monospaced()).foregroundStyle(.tertiary)
+                        .lineLimit(1).truncationMode(.middle)
+                        .textSelection(.enabled)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             Button { revealInFinder([app.url]) } label: {
@@ -424,7 +424,7 @@ private struct AppDetail: View {
                  isLoading ? "…" : state.apps.leftoverSize(of: app).fileSizeText,
                  isLoading ? L("aranıyor", "searching") : "\(count(leftovers.count, "öğe", "item", "items")) · \(L("\(chosen.count) seçili", "\(chosen.count) selected"))", Brand.cyan)
             stat("sparkles", L("Açılacak alan", "Space to free"), (app.size + chosenSize).fileSizeText,
-                 L("uygulama + seçili kalıntılar", "app + leftovers"), Brand.tealInk)
+                 L("uygulama + kalıntılar", "app + leftovers"), Brand.tealInk)
         }
     }
 
