@@ -37,6 +37,7 @@ struct MemoryView: View {
             .padding(22)
             .animation(.easeOut(duration: 0.4), value: advice)
         }
+        .stableScrollbar()
         .navigationTitle(L("Bellek", "Memory"))
         .navigationSubtitle(L("\(s.used.memoryText) / \(s.physical.memoryText) kullanımda", "\(s.used.memoryText) of \(s.physical.memoryText) in use"))
     }

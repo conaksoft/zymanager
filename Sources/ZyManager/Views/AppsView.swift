@@ -328,6 +328,7 @@ private struct AppDetail: View {
                 }
                 .padding(22)
             }
+            .stableScrollbar()
 
             ActionBar {
                 let allOn = !leftovers.isEmpty && chosen.count == leftovers.count

@@ -42,12 +42,13 @@ struct CachesView: View {
                         }
                         .padding(22)
                     }
+                    .stableScrollbar()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             ActionBar {
-                Button(L("Güvenlileri seç", "Select safe items")) { caches.selectAllSafe() }
+                Button(L("Güvenlileri seç", "Select safe items")) { caches.selectAllSafe() }.disabled(!caches.hasScanned)
                 Button(L("Seçimi kaldır", "Deselect all")) { caches.selection.removeAll() }.disabled(caches.selection.isEmpty)
             } trailing: {
                 if caches.isCleaning { ProgressView().controlSize(.small) }

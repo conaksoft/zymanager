@@ -9,6 +9,8 @@ struct OverviewView: View {
     private var staleProjects: Int64 { state.projects.staleSize(olderThan: 30) }
     /// What a single click can get back without losing anything: safe caches plus stale project folders.
     private var reclaimable: Int64 { state.caches.safeSize + staleProjects }
+    /// Roughly the height of the filled panels, so the page doesn't jump when the scan finishes.
+    private static let panelHeight: CGFloat = 270
 
     var body: some View {
         @Bindable var caches = state.caches
@@ -24,6 +26,7 @@ struct OverviewView: View {
             }
             .padding(22)
         }
+        .stableScrollbar()
         .navigationTitle(L("Genel Bakış", "Overview"))
         .toolbar {
             Button {
@@ -153,7 +156,6 @@ struct OverviewView: View {
                 .overlay(shape.strokeBorder(Color.white.opacity(0.1)))
         }
         .shadow(color: Brand.indigo.opacity(0.25), radius: 18, y: 8)
-        .animation(.easeOut(duration: 0.5), value: state.caches.hasScanned)
     }
 
     private func heroLegend(_ color: Color, _ label: String) -> some View {
@@ -202,7 +204,7 @@ struct OverviewView: View {
         return VStack(alignment: .leading, spacing: 10) {
             SectionTitle(title: L("Ekosisteme göre", "By ecosystem"), subtitle: L("Önbellekler, araç ailesine göre", "Caches by tool family"))
             if !state.caches.hasScanned {
-                ScanningPlaceholder(text: L("Taranıyor…", "Scanning…"), symbol: "archivebox").frame(height: 180)
+                ScanningPlaceholder(text: L("Taranıyor…", "Scanning…"), symbol: "archivebox").frame(height: Self.panelHeight)
             } else if rows.isEmpty {
                 ContentUnavailableView(L("Önbellek bulunamadı", "No caches found"), systemImage: "checkmark.circle",
                                        description: Text(L("Hiçbir geliştirici önbelleği 1 MB'ı geçmiyor.", "No developer cache is larger than 1 MB.")))
@@ -228,7 +230,7 @@ struct OverviewView: View {
                 Button(L("Tümü", "All")) { section = .caches }.buttonStyle(.link).font(.callout)
             }
             if !state.caches.hasScanned {
-                ScanningPlaceholder(text: L("Taranıyor…", "Scanning…"), symbol: "internaldrive").frame(height: 180)
+                ScanningPlaceholder(text: L("Taranıyor…", "Scanning…"), symbol: "internaldrive").frame(height: Self.panelHeight)
             } else {
                 VStack(spacing: 0) {
                     let top = Array(state.caches.found.sorted { $0.size > $1.size }.prefix(7))

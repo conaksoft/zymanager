@@ -134,9 +134,14 @@ struct ContentView: View {
             VStack(spacing: 0) {
                 List(SidebarSection.allCases, selection: $navigation.section) { s in
                     HStack {
+                        // Fixed width: on the first frames the rows get a near-zero width proposal and
+                        // the titles were cut to a single glyph until the sidebar re-laid itself out.
                         Label(s.title, systemImage: s.symbol)
+                            .lineLimit(1)
+                            .fixedSize()
                         Spacer(minLength: 6)
-                        if let value = sidebarValue(for: s) {
+                        // Figures wait for the first re-layout; before it they sat right next to the title.
+                        if sidebarGeneration > 0, let value = sidebarValue(for: s) {
                             Text(value.text)
                                 .font(.caption.weight(.medium).monospacedDigit())
                                 .foregroundStyle(value.tint)

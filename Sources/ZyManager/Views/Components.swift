@@ -188,8 +188,7 @@ struct Chip: View {
 // MARK: - Meters
 
 struct UsageBar: View {
-    struct Segment: Identifiable {
-        let id = UUID()
+    struct Segment {
         let value: Double
         let color: Color
     }
@@ -202,7 +201,9 @@ struct UsageBar: View {
     var body: some View {
         GeometryReader { geo in
             HStack(spacing: height >= 8 ? 2 : 0) {
-                ForEach(segments.filter { $0.value > 0 }) { s in
+                // Identified by position: a fresh UUID per render made SwiftUI swap the bars out and
+                // cross-fade them on every memory refresh instead of growing them in place.
+                ForEach(Array(segments.enumerated()).filter { $0.element.value > 0 }, id: \.offset) { _, s in
                     RoundedRectangle(cornerRadius: height / 2.5, style: .continuous)
                         .fill(s.color)
                         .frame(width: total > 0 ? max(2, geo.size.width * min(s.value / total, 1)) : 0)
@@ -217,8 +218,7 @@ struct UsageBar: View {
 }
 
 struct RingGauge<Center: View>: View {
-    struct Segment: Identifiable {
-        let id = UUID()
+    struct Segment {
         let value: Double
         let color: Color
     }
@@ -229,20 +229,20 @@ struct RingGauge<Center: View>: View {
     var track: Color = Color.primary.opacity(0.08)
     @ViewBuilder var center: () -> Center
 
-    private var bounds: [(Segment, Double, Double)] {
+    private var bounds: [(index: Int, segment: Segment, from: Double, to: Double)] {
         guard total > 0 else { return [] }
         var start = 0.0
-        return segments.map { s in
+        return segments.enumerated().map { i, s in
             let end = min(start + s.value / total, 1)
             defer { start = end }
-            return (s, start, end)
+            return (i, s, start, end)
         }
     }
 
     var body: some View {
         ZStack {
             Circle().stroke(track, lineWidth: lineWidth)
-            ForEach(bounds, id: \.0.id) { s, from, to in
+            ForEach(bounds, id: \.index) { _, s, from, to in
                 Circle()
                     .trim(from: from, to: to)
                     .stroke(s.color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .butt))
@@ -398,6 +398,13 @@ struct HoverHighlight: ViewModifier {
 
 extension View {
     func hoverHighlight(radius: CGFloat = 8) -> some View { modifier(HoverHighlight(radius: radius)) }
+
+    /// With "Show scroll bars: Always" (or a mouse attached) macOS reserves a track only once the content
+    /// overflows, so a scan finishing narrowed every card by the scroller's width mid-animation.
+    /// Keeping the track there from the start holds the layout still; overlay scrollers are left alone.
+    func stableScrollbar() -> some View {
+        scrollIndicators(NSScroller.preferredScrollerStyle == .legacy ? .visible : .automatic)
+    }
 }
 
 /// Teal-on-indigo call to action used inside the hero card.
