@@ -31,10 +31,9 @@
 ## Installation
 
 1. Download `ZyManager-<version>.zip` from the [latest release](https://github.com/conaksoft/zymanager/releases/latest) and unzip it.
-2. Move `ZyManager.app` to your Applications folder.
-3. The app is not notarized by Apple yet, so the first time you open it macOS blocks it. Right-click the app and choose **Open**, then confirm. On macOS 15 Sequoia or later, open it once, then go to **System Settings > Privacy & Security** and click **Open Anyway**.
+2. Move `ZyManager.app` to your Applications folder and open it.
 
-The download is a universal app for Apple Silicon and Intel Macs. Each release lists the SHA-256 checksum of the zip. You can also build ZyManager from source as described below.
+The download is a universal app for Apple Silicon and Intel Macs, signed with Conaksoft's Developer ID and notarized by Apple, so it opens without Gatekeeper warnings. Each release lists the SHA-256 checksum of the zip. You can also build ZyManager from source as described below.
 
 ## Building from Source
 
@@ -47,7 +46,7 @@ cd zymanager
 open build/ZyManager.app
 ```
 
-`./build-app.sh --release` builds a universal app and packs it as `build/ZyManager-<version>.zip` with a `.sha256` file next to it.
+`./build-app.sh --release` builds a universal app, signs it with the Developer ID certificate, notarizes and staples it, and packs it as `build/ZyManager-<version>.zip` with a `.sha256` file next to it. It needs the certificate in your keychain and a notarytool profile named `zymanager-notary`. Local builds without `--release` are signed ad hoc.
 
 ZyManager is a Swift Package written in SwiftUI with no third-party dependencies. `./make-icon.sh <1024px.png>` regenerates the app icon.
 
